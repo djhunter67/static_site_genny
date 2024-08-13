@@ -2,7 +2,7 @@
 
 import unittest
 
-from htmlnode import HTMLNode
+from htmlnode import HTMLNode, LeafNode, ParentNode
 
 
 class TestHTMLNode(unittest.TestCase):
@@ -14,19 +14,19 @@ class TestHTMLNode(unittest.TestCase):
         self.assertEqual(node.children, None)
         self.assertEqual(node.props, None)
 
-    def test_to_html(self):
+    def test_props_to_html(self):
         node = HTMLNode(props={"class": "test", "div": "test"})
-        self.assertEqual(node.to_html(), [' class="test"', ' div="test"'])
+        self.assertEqual(node.props_to_html(), ' class="test" div="test"')
 
     def test_repr(self):
         node = HTMLNode(tag="div", value="test", children=[
                         "child"], props={"class": "test"})
         self.assertEqual(
-            repr(node), "div\ntest\n['child']\n{'class': 'test'}\n")
+            repr(node), "div test ['child'] {'class': 'test'}")
 
     def test_repr_empty(self):
         node = HTMLNode()
-        self.assertEqual(repr(node), "None\nNone\nNone\nNone\n")
+        self.assertEqual(repr(node), "None None None None")
 
     def test_node(self):
         node = HTMLNode(tag="div", value="test", children=[
@@ -43,13 +43,14 @@ class TestHTMLNode(unittest.TestCase):
         self.assertEqual(node.children, None)
         self.assertEqual(node.props, None)
 
-    def test_to_html_empty(self):
+    def test_props_to_html_empty(self):
         node = HTMLNode()
-        self.assertEqual(node.to_html(), [])
+        node = node.props_to_html()
+        self.assertRaises(NotImplementedError)
 
-    def test_to_html_empty_props(self):
+    def test_props_to_html_empty_props(self):
         node = HTMLNode(props={})
-        self.assertEqual(node.to_html(), [])
+        self.assertEqual(node.props_to_html(), str())
 
     def test_children_value(self):
         node = HTMLNode(children="test")
@@ -59,23 +60,50 @@ class TestHTMLNode(unittest.TestCase):
         node = HTMLNode(props="test")
         self.assertEqual(node.props, "test")
 
-    def test_to_html_1(self):
+    def test_props_to_html_1(self):
         node = HTMLNode(props={"class": "test", "div": "test"})
-        self.assertEqual(node.to_html(), [' class="test"', ' div="test"'])
+        self.assertEqual(node.props_to_html(), ' class="test" div="test"')
 
-    def test_to_html_2(self):
+    def test_props_to_html_2(self):
         node = HTMLNode(props={"class": "test", "div": "test"})
-        self.assertEqual(node.to_html(), [' class="test"', ' div="test"'])
+        self.assertEqual(node.props_to_html(), ' class="test" div="test"')
 
     def test_repr_2(self):
         node = HTMLNode(tag="div", value="test", children=[
                         "child"], props={"class": "test"})
         self.assertEqual(
-            repr(node), "div\ntest\n['child']\n{'class': 'test'}\n")
+            repr(node), "div test ['child'] {'class': 'test'}")
 
     def test_repr_empty_2(self):
         node = HTMLNode()
-        self.assertEqual(repr(node), "None\nNone\nNone\nNone\n")
+        self.assertEqual(repr(node), "None None None None")
+
+
+class TestLeafNode(unittest.TestCase):
+
+    def test_init(self):
+        node = LeafNode('a', "super cool",  {
+                        "href": "http://www.christerpher.com"})
+        self.assertEqual(
+            node.to_html(), '<a href="http://www.christerpher.com">super cool</a>')
+
+
+class TestParentNode(unittest.TestCase):
+
+    def test_headings(self):
+        node = ParentNode(
+            "h2",
+            [
+                LeafNode("b", "Bold text"),
+                LeafNode(None, "Normal text"),
+                LeafNode("i", "italic text"),
+                LeafNode(None, "Normal text"),
+            ],
+        )
+        self.assertEqual(
+            node.to_html(),
+            "<h2><b>Bold text</b>Normal text<i>italic text</i>Normal text</h2>",
+        )
 
 
 if __name__ == "__main__":
